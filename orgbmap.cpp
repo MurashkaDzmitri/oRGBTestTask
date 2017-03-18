@@ -36,13 +36,13 @@ QPixmap ORGBMap::toPixmap(float ybDelta, float rgDelta)
     {
         for (int j = 0; j < _pixelsORGB[i].length(); j++)
         {
-            resultImage.setPixelColor(j, i, pixelFromORGBToRGB(_pixelsORGB[i][j]) );
+            resultImage.setPixelColor(j, i, pixelFromORGBToRGB(_pixelsORGB[i][j], ybDelta, rgDelta) );
         }
     }
     return QPixmap::fromImage(resultImage);
 }
 
-void ORGBMap::checkSafety(QImage image) // Something like test function
+void ORGBMap::checkSafety(QImage image) // Something like test function and not refactored
 {
     for (int i = 0; i < image.height(); i++)
     {
@@ -152,7 +152,7 @@ QMatrix2x2 ORGBMap::generateRotateMatrix(float angle)
     return resultMatr;
 }
 
-QColor ORGBMap::pixelFromORGBToRGB(QMatrix3x3 pixel)
+QColor ORGBMap::pixelFromORGBToRGB(QMatrix3x3 pixel, float ybDelta, float rgDelta)
 {
     pixel.data()[3] = addSafeAsCos(pixel.data()[3], ybDelta);
     pixel.data()[6] = addSafeAsCos(pixel.data()[6], rgDelta);
