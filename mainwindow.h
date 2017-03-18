@@ -21,11 +21,7 @@ public:
     ~MainWindow();
 
 private slots:
-    void on_coolButton_clicked();
-    void handleCoolDialogEnd(bool isOk = true);
 
-    void on_warmButton_clicked();
-    void handleWarmDialogEnd(bool isOk = true);
     void handleOpenFileClicked();
     void handleFileDialogEnd(bool isOk = true);
 
@@ -34,11 +30,6 @@ private:
 
     Ui::MainWindow *ui;
 
-    QColorDialog *_coolDialog = nullptr;
-    QColorDialog *_warmDialog = nullptr;
-
-    QColor _coolColor;
-    QColor _warmColor;
 
     QFileDialog *_openFileDialog = nullptr;
 

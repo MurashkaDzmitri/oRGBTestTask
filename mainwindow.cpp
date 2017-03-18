@@ -16,36 +16,6 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::on_coolButton_clicked()
-{
-    _coolDialog = new QColorDialog();
-    _coolDialog->show();
-    connect(_coolDialog, &QColorDialog::accepted,[this]{handleCoolDialogEnd(true);});
-    connect(_coolDialog, &QColorDialog::rejected,[this]{handleCoolDialogEnd(false);});
-}
-
-void MainWindow::handleCoolDialogEnd(bool isOk)
-{
-    _coolColor = _coolDialog->currentColor();
-    delete _coolDialog;
-    _coolDialog = nullptr;
-}
-
-void MainWindow::on_warmButton_clicked()
-{
-    _warmDialog = new QColorDialog();
-    _warmDialog->show();
-    connect(_warmDialog, &QColorDialog::accepted,[this]{handleWarmDialogEnd(true);});
-    connect(_warmDialog, &QColorDialog::rejected,[this]{handleWarmDialogEnd(false);});
-}
-
-void MainWindow::handleWarmDialogEnd(bool isOk)
-{
-    _warmColor = _warmDialog->currentColor();
-    delete _warmDialog;
-    _warmDialog = nullptr;
-}
-
 void MainWindow::handleOpenFileClicked()
 {
     _openFileDialog = new QFileDialog(this);

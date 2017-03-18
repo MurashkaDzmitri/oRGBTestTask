@@ -43,6 +43,9 @@ private:
     QMatrix3x3 rotateORGBToLCC(QMatrix3x3 matr );
     QMatrix2x2 generateRotateMatrix(float angle);
 
+    QColor pixelFromORGBToRGB(QMatrix3x3 pixel);
+    QMatrix3x3 pixelFromRGBToORGB(QColor pixel);
+
     QList<QVector < QMatrix3x3 > > _pixelsORGB;
     QMatrix3x3 _fromRGBToLCC;
     QMatrix3x3 _fromLCCToRGB;
