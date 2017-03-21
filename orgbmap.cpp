@@ -39,10 +39,10 @@ QPixmap ORGBMap::toPixmap(float ybDelta, float rgDelta)
         for (int j = 0; j < _pixelsORGB[i].length(); j++)
         {
             resultImage.setPixelColor(j, i, pixelFromORGBToRGB(_pixelsORGB[i][j], ybDelta, rgDelta) );
-            if (resultImage.pixelColor(j, i) != _sourceMap.toImage().pixelColor(j, i))
-            {
-                qDebug() << "pixel not equal";
-            }
+//            if (resultImage.pixelColor(j, i) != _sourceMap.toImage().pixelColor(j, i))
+//            {
+//                qDebug() << "pixel not equal";
+//            }
         }
     }
     return QPixmap::fromImage(resultImage);
