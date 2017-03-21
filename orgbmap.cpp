@@ -1,6 +1,8 @@
 #include "orgbmap.h"
 
-ORGBMap::ORGBMap(QPixmap pixmap, QObject *parent) : QObject(parent)
+ORGBMap::ORGBMap(QPixmap pixmap, QObject *parent)
+    : QObject(parent),
+      _sourceMap(pixmap)
 {
     initializeBaseMatrices();
     fromPixmap(pixmap);
@@ -28,15 +30,19 @@ QPixmap ORGBMap::toPixmap(float ybDelta, float rgDelta)
     if (_pixelsORGB.count() == 0)
         return QPixmap();
     QImage resultImage = QImage( _pixelsORGB.first().length(), _pixelsORGB.count(), QImage::Format_RGB32);
-    float maxYB = findAbsMax(false);
-    float maxRG = findAbsMax(true);
-    ybDelta = maxYB / addSafeAsCos(maxYB, ybDelta);
-    rgDelta = maxRG / addSafeAsCos(maxRG, rgDelta);
+//    float maxYB = findAbsMax(false);
+//    float maxRG = findAbsMax(true);
+//    ybDelta = maxYB / addSafeAsCos(maxYB, ybDelta);
+//    rgDelta = maxRG / addSafeAsCos(maxRG, rgDelta);
     for (int i = 0; i < _pixelsORGB.count(); i++)
     {
         for (int j = 0; j < _pixelsORGB[i].length(); j++)
         {
             resultImage.setPixelColor(j, i, pixelFromORGBToRGB(_pixelsORGB[i][j], ybDelta, rgDelta) );
+            if (resultImage.pixelColor(j, i) != _sourceMap.toImage().pixelColor(j, i))
+            {
+                qDebug() << "pixel not equal";
+            }
         }
     }
     return QPixmap::fromImage(resultImage);
@@ -48,9 +54,15 @@ void ORGBMap::checkSafety(QImage image) // Something like test function and not 
     {
         for (int j = 0; j < image.width(); j++ )
         {
+            if (i == 153 && j == 256)
+            {
+                qDebug() << i << j << "First bad pixel";
+            }
             QColor colorPixel(image.pixel(j, i));
             QMatrix3x3 pixelMatr; pixelMatr.fill(0.);
-            pixelMatr.data()[0] = colorPixel.redF(); pixelMatr.data()[3] = colorPixel.greenF(); pixelMatr.data()[6] = colorPixel.blueF();
+            pixelMatr.data()[0] = qPow(colorPixel.redF()  , (1./2.2));
+            pixelMatr.data()[3] = qPow(colorPixel.greenF(), (1./2.2)) ;
+            pixelMatr.data()[6] = qPow(colorPixel.blueF() , (1./2.2));
             QMatrix3x3 rgbMatrix = pixelMatr;
             pixelMatr =   MatrixMultiplier::multiplySquare3D( _fromRGBToLCC , pixelMatr) ;
             pixelMatr = rotateLCCToORGB(pixelMatr);
@@ -67,9 +79,9 @@ void ORGBMap::checkSafety(QImage image) // Something like test function and not 
                 qDebug() << "Pixel not valid " << i << j;
             }
 
-            color.setRedF  (currentMatrix.data()[0]);
-            color.setGreenF(currentMatrix.data()[3]);
-            color.setBlueF (currentMatrix.data()[6]);
+            color.setRedF  (qPow(currentMatrix.data()[0],1./2.2));
+            color.setGreenF(qPow(currentMatrix.data()[3],1./2.2));
+            color.setBlueF (qPow(currentMatrix.data()[6],1./2.2));
         }
     }
 }
@@ -93,20 +105,22 @@ void ORGBMap::resize(QPoint point)
 void ORGBMap::initializeBaseMatrices()
 {
     float valuesRGBToLCC[] = {0.2990, 0.5870, 0.1140,
-                            0.5000, 0.5000, -1.0000,
-                            0.8660, -0.8660, 0.0000};
+                            0.5     , 0.5   , -1.,
+                            0.8660, -0.8660, 0.};
     _fromRGBToLCC = QMatrix3x3(valuesRGBToLCC);
-    float valuesLCCToRGB[] = {1.0000, 0.1140, 0.7436,
-                              1.0000, 0.1140, -0.4111,
-                              1.0000, -0.8860, 0.1663};
+    _fromRGBToLCC = _fromRGBToLCC.transposed();
+    float valuesLCCToRGB[] = {1.    , 0.1140, 322./433.,
+                              1.    , 0.1140, -(178./433.),
+                              1.    , -0.8860, 72./433.};
     _fromLCCToRGB = QMatrix3x3(valuesLCCToRGB);
+    _fromLCCToRGB = _fromLCCToRGB.transposed();
 }
 
 QMatrix3x3 ORGBMap::rotateLCCToORGB(QMatrix3x3 matr)
 {
     double o = qAtan2(matr.data()[6] , matr.data()[3]);
     double o_ = o;
-    if (o_ < M_PI / 3)
+    if (o_ < M_PI / 3.)
     {
         o_*=1.5;
     }
@@ -132,7 +146,7 @@ QMatrix3x3 ORGBMap::rotateORGBToLCC(QMatrix3x3 matr)
     }
     else if (o_ <= M_PI && o_ >= M_PI/2.)
     {
-        o_ = M_PI/3. + (1.25)*(o_ - M_PI/2.);
+        o_ = M_PI/3. + (4./3.)*(o_ - M_PI/2.);
     }
     QMatrix2x2 matrColor; matrColor.fill(0.);
     matrColor.data()[0] = matr.data()[3]; matrColor.data()[2] = matr.data()[6];
@@ -159,16 +173,18 @@ QColor ORGBMap::pixelFromORGBToRGB(QMatrix3x3 pixel, float ybDelta, float rgDelt
     pixel = rotateORGBToLCC(pixel);
     pixel =   MatrixMultiplier::multiplySquare3D( _fromLCCToRGB , pixel) ;
     QColor color;
-    color.setRedF(pixel.data()[0]);
-    color.setGreenF(pixel.data()[3]);
-    color.setBlueF(pixel.data()[6]);
+    color.setRedF( toValidRGBValue( qPow(pixel.data()[0], 2.2)));
+    color.setGreenF(toValidRGBValue( qPow(pixel.data()[3], 2.2)));
+    color.setBlueF( toValidRGBValue( qPow(pixel.data()[6], 2.2)));
     return color;
 }
 
 QMatrix3x3 ORGBMap::pixelFromRGBToORGB(QColor pixel)
 {
     QMatrix3x3 pixelMatr; pixelMatr.fill(0.);
-    pixelMatr.data()[0] = pixel.redF(); pixelMatr.data()[3] = pixel.greenF(); pixelMatr.data()[6] = pixel.blueF();
+    pixelMatr.data()[0] = qPow( pixel.redF(), (1./2.2));
+    pixelMatr.data()[3] = qPow( pixel.greenF(), (1./2.2));
+    pixelMatr.data()[6] = qPow( pixel.blueF(), (1./2.2));
     pixelMatr =   MatrixMultiplier::multiplySquare3D( _fromRGBToLCC , pixelMatr);
     return rotateLCCToORGB(pixelMatr);
 }
@@ -203,4 +219,13 @@ float ORGBMap::findAbsMax(bool isRG)
         }
     }
     return max;
+}
+
+float ORGBMap::toValidRGBValue(float value)
+{
+    if (value < 0 )
+        value = 0;
+    else if (value > 1)
+        value = 1;
+    return value;
 }

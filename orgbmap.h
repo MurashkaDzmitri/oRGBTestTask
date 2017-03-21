@@ -38,6 +38,7 @@ private:
 
     float addSafeAsCos(float value, float delta);
     float findAbsMax(bool isRG);
+    float toValidRGBValue(float value);
 
     QMatrix3x3 rotateLCCToORGB(QMatrix3x3 matr );
     QMatrix3x3 rotateORGBToLCC(QMatrix3x3 matr );
@@ -50,6 +51,7 @@ private:
     QMatrix3x3 _fromRGBToLCC;
     QMatrix3x3 _fromLCCToRGB;
 
+    QPixmap _sourceMap;
 
 
 };

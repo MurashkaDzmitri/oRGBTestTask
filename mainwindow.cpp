@@ -36,12 +36,12 @@ void MainWindow::handleFileDialogEnd(bool isOk)
     ui->label_1->setPixmap(pixmap.scaled(ui->label_0->size(),Qt::KeepAspectRatio));
 
     ORGBMap map(pixmap);
-    map.checkSafety(pixmap.toImage());
-//    ui->label_0->setPixmap(map.toPixmap(1.0, 1.0).scaled(ui->label_0->size(),Qt::KeepAspectRatio));
-//    if (pixmap.toImage() == map.toPixmap(1.0, 1.0).toImage() )
-//    {
-//        qDebug() << "Images are equal!!";
-//    }
+    //map.checkSafety(pixmap.toImage());
+    ui->label_0->setPixmap(map.toPixmap(1, 1).scaled(ui->label_0->size(),Qt::KeepAspectRatio));
+    if (pixmap.toImage() == map.toPixmap(1, 1).toImage() )
+    {
+        qDebug() << "Images are equal!!";
+    }
 }
 
 void MainWindow::setUpImagesLabels()
